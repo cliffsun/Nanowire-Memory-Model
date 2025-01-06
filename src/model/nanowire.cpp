@@ -64,7 +64,7 @@ vector<vector<int>> arrayOfVorticityNumbers(int vn, const vector<int> vorticies,
 }
 
 
-double supercurrent(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, 
+double supercurrent(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, const vector<double> &criticalCurrents,
                     const vector<int> &vorticity_arr, double initialPhaseDiff, double B) {
     vector<double> devicePhaseDiff(arrayOfWires.size(), 0);
     int numOfWires = arrayOfWires.size();
@@ -85,28 +85,28 @@ double supercurrent(const vector<double> &arrayOfWires, const vector<double> &cr
 
     double curr = 0;
     for (int i = 0; i < numOfWires; ++i) {
-        curr += devicePhaseDiff[i] / criticalPhases[i];
+        curr += criticalCurrents[i] * devicePhaseDiff[i] / criticalPhases[i];
     }
 
     return curr;
 }
 
-vector<double> current_v_phase(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, 
+vector<double> current_v_phase(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, const vector<double> &criticalCurrents,
                                const vector<int> &vorticity_arr, const vector<double> &initialPhaseDiffs, double B) {
     vector<double> supercurrent_array;
     for (double phase : initialPhaseDiffs) {
-        double curr = supercurrent(arrayOfWires, criticalPhases, vorticity_arr, phase, B);
+        double curr = supercurrent(arrayOfWires, criticalPhases, criticalCurrents, vorticity_arr, phase, B);
         supercurrent_array.push_back(curr);
     }
     return supercurrent_array;
 }
 
-pair<vector<double>, vector<double>> MagField_v_Critical_Current(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, 
+pair<vector<double>, vector<double>> MagField_v_Critical_Current(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, const vector<double> &criticalCurrents,
                                                                  const vector<int> &vorticity_arr, const vector<double> &initialPhaseDiffs, const vector<double> &MagField) {
     vector<double> I_c_max, I_c_min;
 
     for (double B : MagField) {
-        vector<double> supercurrent_array = current_v_phase(arrayOfWires, criticalPhases, vorticity_arr, initialPhaseDiffs, B);
+        vector<double> supercurrent_array = current_v_phase(arrayOfWires, criticalPhases, criticalCurrents, vorticity_arr, initialPhaseDiffs, B);
         supercurrent_array.erase(remove_if(supercurrent_array.begin(), supercurrent_array.end(), [](double x) { return isnan(x); }), supercurrent_array.end());
 
         if (!supercurrent_array.empty()) {

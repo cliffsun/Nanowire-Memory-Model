@@ -14,18 +14,21 @@ int main(int argc, char *argv[]) {
 
     string arrayOfWiresStr = argv[1];
     string criticalPhasesStr = argv[2];
+    string criticalCurrentsStr = argv[3];
     
     vector<double> arrayOfWires = getArrayFromString(arrayOfWiresStr);
     vector<double> criticalPhases = getArrayFromString(criticalPhasesStr);
+    vector<double> criticalCurrents = getArrayFromString(criticalCurrentsStr);
 
     int bottom_vn = -5, upper_vn = 5;
     vector<vector<int>> vorticity_states;
 
     assert(arrayOfWires.size() == criticalPhases.size() && "Both arrays must be the same length");
+    assert(arrayOfWires.size() == criticalCurrents.size() && "Both arrays must be the same length");
 
     // Check if custom vorticity states are provided
-    if (argc > 3) {
-        for (int i = 3; i < argc; ++i) {
+    if (argc > 4) {
+        for (int i = 4; i < argc; ++i) {
             string curr_vn = argv[i];
             vector<int> custom_vorticity = int_getArrayFromString(curr_vn);
             assert(custom_vorticity.size() == arrayOfWires.size() - 1 && "# of vorticity states must be (# wires - 1)");
@@ -54,7 +57,7 @@ int main(int argc, char *argv[]) {
     vector<vector<double>> I_c_max, I_c_min;
 
     for (const auto &vorticity_arr : vorticity_states) {
-        auto [ic_max, ic_min] = MagField_v_Critical_Current(arrayOfWires, criticalPhases, vorticity_arr, initialPhaseDiffs, MagField);
+        auto [ic_max, ic_min] = MagField_v_Critical_Current(arrayOfWires, criticalPhases, criticalCurrents, vorticity_arr, initialPhaseDiffs, MagField);
         I_c_max.push_back(ic_max);
         I_c_min.push_back(ic_min);
     }
