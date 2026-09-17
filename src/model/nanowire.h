@@ -28,5 +28,9 @@ void save_vector_to_file(const string &filename, const vector<double> &vec);
 void save_2d_vector_to_file(const string &filename, const vector<vector<double>> &matrix);
 void save_2d_vector_to_file(const string &filename, const vector<vector<int>> &matrix);
 std::string vectorToPythonSyntax(const std::vector<int>& vec);
+vector<vector<tuple<double,double>>> calculate_kinetic_inductance(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, const vector<double> &criticalCurrents, const vector<int> &vorticity_arr, vector<double> phaseDiff, const vector<double> &MagField);
+vector<tuple<double,double>> calculate_kinetic_inductance_per_mag(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, const vector<double> &criticalCurrents, const vector<int> &vorticity_arr, vector<double> &phaseDiff, double B);
+double KI(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, const vector<double> &criticalCurrents, const vector<int> &vorticity_arr, double phaseDiff, double B);
+void saveToCSV_tuple(const vector<vector<tuple<double, double>>>& KI_vn, const string& filename);
 
 #endif

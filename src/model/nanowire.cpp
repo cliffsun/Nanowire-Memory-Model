@@ -82,14 +82,17 @@ double supercurrent(const vector<double> &arrayOfWires, const vector<double> &cr
             return NAN;
         }
     }
+    double a = 0;
 
     double curr = 0;
     for (int i = 0; i < numOfWires; ++i) {
-        curr += criticalCurrents[i] * devicePhaseDiff[i] / criticalPhases[i];
+        curr += criticalCurrents[i] * ((devicePhaseDiff[i] / criticalPhases[i]) - a * pow((devicePhaseDiff[i] / criticalPhases[i]),3));
     }
 
     return curr;
 }
+
+
 
 vector<double> current_v_phase(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, const vector<double> &criticalCurrents,
                                const vector<int> &vorticity_arr, const vector<double> &initialPhaseDiffs, double B) {
@@ -117,9 +120,56 @@ pair<vector<double>, vector<double>> MagField_v_Critical_Current(const vector<do
             I_c_min.push_back(NAN);
         }
     }
-    
     return {I_c_max, I_c_min};
 }
+
+vector<vector<tuple<double,double>>> calculate_kinetic_inductance(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, const vector<double> &criticalCurrents, const vector<int> &vorticity_arr, vector<double> phaseDiff, const vector<double> &MagField) {
+    vector<vector<tuple<double,double>>> KI_I_values;
+    for (double B : MagField) {
+        vector<tuple<double,double>> KI_per_b = calculate_kinetic_inductance_per_mag(arrayOfWires, criticalPhases, criticalCurrents, vorticity_arr, phaseDiff, B);
+        KI_I_values.push_back(KI_per_b);
+    }  
+    return KI_I_values;
+}
+
+vector<tuple<double,double>> calculate_kinetic_inductance_per_mag(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, const vector<double> &criticalCurrents, const vector<int> &vorticity_arr, vector<double> &phaseDiff, double B) {
+    vector<tuple<double,double>> KI_per_b; 
+    for (double phase : phaseDiff) {
+        double KI_val = KI(arrayOfWires, criticalPhases, criticalCurrents, vorticity_arr, phase, B);
+        double current = supercurrent(arrayOfWires, criticalPhases, criticalCurrents, vorticity_arr, phase, B);
+        tuple<double,double> temp = make_tuple(KI_val, current);
+        KI_per_b.push_back(temp);
+    }
+    return KI_per_b;
+}
+
+double KI(const vector<double> &arrayOfWires, const vector<double> &criticalPhases, const vector<double> &criticalCurrents, const vector<int> &vorticity_arr, double phaseDiff, double B) {
+    vector<double> devicePhaseDiff(arrayOfWires.size(), 0);
+    double currPhaseDiff = phaseDiff;
+    double KI_inv = 0;
+
+    for (size_t i = 0; i < arrayOfWires.size() - 1; ++i) {
+        devicePhaseDiff[i] = currPhaseDiff;
+        devicePhaseDiff[i + 1] = currPhaseDiff + 2 * M_PI * B * (arrayOfWires[i + 1] - arrayOfWires[i]) - 2 * M_PI * vorticity_arr[i];
+        currPhaseDiff = devicePhaseDiff[i+1];
+    }
+
+    for (int i = 0; i < arrayOfWires.size(); ++i) {
+        if (abs(devicePhaseDiff[i]) > abs(criticalPhases[i])) {
+            return NAN;
+        }
+    }
+    double a = 0.3333;
+    
+    for (size_t i = 0; i < arrayOfWires.size(); ++i) {
+        KI_inv += (criticalCurrents[i] * ((1.0/criticalPhases[i]) - a * 3.0/criticalPhases[i]*pow((devicePhaseDiff[i]/criticalPhases[i]),2)));
+    }
+    // if (std::abs(KI) < 5e-1) {
+    //     return NAN; // or 0, or some sentinel value
+    // }
+    return 1.0 / KI_inv;
+}
+
 
 void save_vector_to_file(const string &filename, const vector<double> &vec) {
     ofstream file(filename);
@@ -169,4 +219,24 @@ std::string vectorToPythonSyntax(const std::vector<int>& vec) {
     }
     result += "]";
     return result;
+}
+
+void saveToCSV_tuple(const vector<vector<tuple<double, double>>>& KI_vn, const string& filename) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Error: Could not open " << filename << endl;
+        return;
+    }
+
+    for (const auto& row : KI_vn) {
+        for (size_t j = 0; j < row.size(); ++j) {
+            auto [val1, val2] = row[j];
+            file << val1 << "|" << val2; // or val2, depending on which you want
+            if (j < row.size() - 1)
+                file << ",";
+        }
+        file << "\n";
+    }
+
+    file.close();
 }

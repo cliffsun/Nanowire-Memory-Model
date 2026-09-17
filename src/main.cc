@@ -20,6 +20,16 @@ int main(int argc, char *argv[]) {
     vector<double> criticalPhases = getArrayFromString(criticalPhasesStr);
     vector<double> criticalCurrents = getArrayFromString(criticalCurrentsStr);
 
+    // criticalPhases.clear();
+
+    // double n = arrayOfWires.size();
+
+    // double a = 1.0;
+
+    // for (size_t i = 0; i < n; ++i) {
+    //     criticalPhases.push_back(M_PI * (n-1)/n * a);
+    // } 
+    
     int bottom_vn = -5, upper_vn = 5;
     vector<vector<int>> vorticity_states;
 
@@ -46,20 +56,32 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    double magFieldMin = -5;
+    double magFieldMax = 5;
+
     int discretations = 1000;
     vector<double> initialPhaseDiffs(discretations);
     vector<double> MagField(discretations);
+
     for (int i = 0; i < discretations; ++i) {
         initialPhaseDiffs[i] = -criticalPhases[0] + i * (2 * criticalPhases[0] / (discretations - 1));
-        MagField[i] = -10 + i * (20.0 / (discretations - 1));
+        MagField[i] = magFieldMin + i * ((magFieldMax - magFieldMin) / (discretations - 1));
     }
 
     vector<vector<double>> I_c_max, I_c_min;
 
     for (const auto &vorticity_arr : vorticity_states) {
         auto [ic_max, ic_min] = MagField_v_Critical_Current(arrayOfWires, criticalPhases, criticalCurrents, vorticity_arr, initialPhaseDiffs, MagField);
+        // vector<vector<tuple<double,double>>> KI_vn = calculate_kinetic_inductance(arrayOfWires, criticalPhases, criticalCurrents, vorticity_arr, initialPhaseDiffs, MagField);
         I_c_max.push_back(ic_max);
         I_c_min.push_back(ic_min);
+        // string file_name = "KI";
+        // for (size_t i = 0; i < vorticity_arr.size(); ++i) { 
+        //     file_name += "_" + to_string(vorticity_arr[i]);
+        // }
+        // file_name += ".csv";
+        // cout << file_name << endl;
+        // saveToCSV_tuple(KI_vn, base_path + file_name);
     }
 
     save_2d_vector_to_file(base_path + "Ic_max.csv", I_c_max);

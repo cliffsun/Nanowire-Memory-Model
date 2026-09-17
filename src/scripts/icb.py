@@ -76,16 +76,15 @@ def main():
     ax = plt.gca()
     ax.xaxis.set_major_locator(x_locator)
     ax.yaxis.set_major_locator(y_locator)
-    plt.plot(MagField, max_values, color='#0000FF')
-    plt.plot(MagField, np.array(min_values), linestyle='--', color='#FFA500')
-    plt.xlim(-10,10)
+    plt.plot(MagField, max_values, color='blue', linewidth=3)
+    plt.plot(MagField, np.array(min_values), linestyle='--', color='red', linewidth=3)
+    plt.xlim(-4,4)
     plt.ylim(-3,3)
     plt.grid()
-    plt.title("Nanowire Critical Current Graph")
-    plt.xlabel("Magnetic Field (B)")
-    plt.ylabel("Critical Current (I_c)")
-    plt.tick_params(axis='both', which='major', labelsize=14)  # For major ticks
+    plt.tick_params(axis='both', which='major', labelsize=20)  # For major ticks
     plt.tick_params(axis='both', which='minor', labelsize=12)
+    plt.xlabel("b", fontsize=30)
+    plt.ylabel("j", fontsize=30)
     plt.show()
     plt.close()
 
